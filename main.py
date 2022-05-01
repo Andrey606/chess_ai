@@ -137,7 +137,20 @@ def find_rect(origin_desk, image_file):
 
 
 def find_chess_positions(origin_desk, desk_coord, chess_coord):
-    print()
+    # x = horizont (a, b, c, d, e, f, g, h)
+    # y = vertical (8, 7, 6, 5, 4, 3, 2, 1)
+    # desk_coord - [[x, y], [x, y]]
+    rect_size = [(desk_coord[1][0] - desk_coord[0][0])/8, (desk_coord[1][1] - desk_coord[0][1])/8]
+
+    result = []
+    for chess in chess_coord:
+        pos = str(9 - math.ceil((chess['position'][1] - desk_coord[0][1])/rect_size[0])) + \
+              chr(64 + math.ceil((chess['position'][0] - desk_coord[0][0])/rect_size[0]))
+        result.append({'color': chess['color'], 'model': chess['model'], 'position': pos})
+        cv2.putText(origin_desk, pos, (chess['position'][0], chess['position'][1] - 25), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0))
+
+    return result
+
 
 def main():
     desk = cv2.imread(desk_img_path)
@@ -150,7 +163,7 @@ def main():
         chess_coord += find_chess_piece_position(desk, white_chess_piece, desk_img_path, 0.6)
 
     desk_coord = find_rect(desk, desk_img_path)
-    find_chess_positions(desk, desk_coord, chess_coord)
+    chess_positions = find_chess_positions(desk, desk_coord, chess_coord)
 
     cv2.imshow('detected', desk)
     cv2.waitKey(0)
