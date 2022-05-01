@@ -3,6 +3,7 @@ import numpy as np
 import math
 from enum import Enum
 
+
 class Chess(Enum):
     PAWN = 1,
     HORSE = 2,
@@ -19,18 +20,20 @@ class ChessColor(Enum):
 
 desk_img_path = 'images/desk2.png'
 prefix_path = 'images/chess/'
+# threshold = 0.8
 black_chess_piece_arr = [{'path': 'black_pawn.png', 'color': ChessColor.BLACK, 'model': Chess.PAWN},
                          {'path': 'black_horse.png', 'color': ChessColor.BLACK, 'model': Chess.HORSE},
                          {'path': 'black_king.png', 'color': ChessColor.BLACK, 'model': Chess.KING},
                          {'path': 'black_rook.png', 'color': ChessColor.BLACK, 'model': Chess.ROOK},
                          {'path': 'black_bishop.png', 'color': ChessColor.BLACK, 'model': Chess.BISHOP},
-                         {'path': 'black_queen.png', 'color': ChessColor.BLACK, 'model': Chess.QUEEN}]  # threshold = 0.8
+                         {'path': 'black_queen.png', 'color': ChessColor.BLACK, 'model': Chess.QUEEN}]
+# threshold = 0.6
 white_chess_piece_arr = [{'path': 'white_pawn.png', 'color': ChessColor.WHITE, 'model': Chess.PAWN},
                          {'path': 'white_horse.png', 'color': ChessColor.WHITE, 'model': Chess.HORSE},
                          {'path': 'white_king.png', 'color': ChessColor.WHITE, 'model': Chess.KING},
                          {'path': 'white_rook.png', 'color': ChessColor.WHITE, 'model': Chess.ROOK},
                          {'path': 'white_bishop.png', 'color': ChessColor.WHITE, 'model': Chess.BISHOP},
-                         {'path': 'white_queen.png', 'color': ChessColor.WHITE, 'model': Chess.QUEEN}]  # threshold = 0.6
+                         {'path': 'white_queen.png', 'color': ChessColor.WHITE, 'model': Chess.QUEEN}]
 
 
 def get_img_rect(image_file):
@@ -68,7 +71,7 @@ def fix_duplication(loc_arr):
     arr0 = np.delete(loc_arr[0], indexes_to_removing)
     arr1 = np.delete(loc_arr[1], indexes_to_removing)
 
-    return (arr0, arr1)
+    return arr0, arr1
 
 
 def find_chess_piece_position(origin_desk, chess_piece_img, desk_img, threshold):
@@ -84,7 +87,9 @@ def find_chess_piece_position(origin_desk, chess_piece_img, desk_img, threshold)
 
     chess_piece_positions = []
     for pt in zip(*fixed_loc[::-1]):
-        chess_piece_positions.append({'position': pt, 'color': chess_piece_img['color'], 'model': chess_piece_img['model']})
+        chess_piece_positions.append({'position': pt,
+                                      'color': chess_piece_img['color'],
+                                      'model': chess_piece_img['model']})
         cv2.rectangle(origin_desk, pt, (pt[0] + img_rect[0], pt[1] + img_rect[1]), (255, 0, 0), 1)
         chess_name = chess_piece_img['path'].replace(prefix_path, '').replace('.png', '')
         cv2.putText(origin_desk, chess_name, (pt[0], pt[1]-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0))
@@ -147,7 +152,12 @@ def find_chess_positions(origin_desk, desk_coord, chess_coord):
         pos = str(9 - math.ceil((chess['position'][1] - desk_coord[0][1])/rect_size[0])) + \
               chr(64 + math.ceil((chess['position'][0] - desk_coord[0][0])/rect_size[0]))
         result.append({'color': chess['color'], 'model': chess['model'], 'position': pos})
-        cv2.putText(origin_desk, pos, (chess['position'][0], chess['position'][1] - 25), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0))
+        cv2.putText(origin_desk,
+                    pos,
+                    (chess['position'][0], chess['position'][1] - 25),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.5,
+                    (255, 0, 0))
 
     return result
 
