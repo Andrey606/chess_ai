@@ -174,19 +174,19 @@ def detect_chess(screen):
     for black_chess_piece in black_chess_piece_arr:
         chess_coord += find_chess_piece_position(screen, black_chess_piece, desk_img_path, 0.8)
 
-    print("1--- %s seconds ---" % (time.time() - start_time))
-    start_time = time.time()
+    parse_black = time.time()
 
     for white_chess_piece in white_chess_piece_arr:
         chess_coord += find_chess_piece_position(screen, white_chess_piece, desk_img_path, 0.6)
 
-    print("2--- %s seconds ---" % (time.time() - start_time))
-    start_time = time.time()
+    parse_white = time.time()
 
     desk_coord = find_rect(screen, desk_img_path)
     chess_positions = find_chess_positions(screen, desk_coord, chess_coord)
 
-    print("3--- %s seconds ---" % (time.time() - start_time))
+    print("parse_black: %s, parse_white: %s, total: %s" % (round(parse_black - start_time, 2),
+                                                           round(parse_white - parse_black, 2),
+                                                           round(time.time() - start_time, 2)))
 
 
 def main():
