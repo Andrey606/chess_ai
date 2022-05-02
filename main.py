@@ -2,7 +2,9 @@ import cv2
 import numpy as np
 import math
 from enum import Enum
-
+import time
+from mss import mss
+from PIL import Image
 
 class Chess(Enum):
     PAWN = 1,
@@ -43,8 +45,8 @@ def get_img_rect(image_file):
 
 
 def convert_to_black_white(image_file):
-    img = cv2.imread(image_file)
-    gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # img = cv2.imread(image_file)
+    gray_img = cv2.cvtColor(image_file, cv2.COLOR_BGR2GRAY)
     (thresh, blackAndWhiteImg) = cv2.threshold(gray_img, 100, 255, cv2.THRESH_BINARY)
     return blackAndWhiteImg
 
@@ -75,8 +77,8 @@ def fix_duplication(loc_arr):
 
 
 def find_chess_piece_position(origin_desk, chess_piece_img, desk_img, threshold):
-    desk_black_white = convert_to_black_white(prefix_path + chess_piece_img['path'])
-    chess_piece_black_white_template = convert_to_black_white(desk_img)
+    desk_black_white = convert_to_black_white(cv2.imread(prefix_path + chess_piece_img['path']))
+    chess_piece_black_white_template = convert_to_black_white(origin_desk)
     img_rect = get_img_rect(prefix_path + chess_piece_img['path'])
 
     res = cv2.matchTemplate(desk_black_white, chess_piece_black_white_template, cv2.TM_CCOEFF_NORMED)
@@ -99,11 +101,11 @@ def find_chess_piece_position(origin_desk, chess_piece_img, desk_img, threshold)
 
 def find_rect(origin_desk, image_file):
     # Read input image
-    img = cv2.imread(image_file)
+    # img = cv2.imread(image_file)
 
     # convert from BGR to HSV color space
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    desk_black_white = convert_to_black_white(image_file)
+    gray = cv2.cvtColor(origin_desk, cv2.COLOR_BGR2GRAY)
+    desk_black_white = convert_to_black_white(origin_desk)
 
     # apply threshold
     thresh = cv2.threshold(gray, 230, 255, cv2.THRESH_BINARY)[1]
@@ -112,18 +114,19 @@ def find_rect(origin_desk, image_file):
     # draw all contours in green and accepted ones in red
     contours = cv2.findContours(desk_black_white, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     contours = contours[0] if len(contours) == 2 else contours[1]
-    result = img.copy()
+    # result = img.copy()
 
+    min_x = 1000000
+    min_y = 1000000
+    max_x = 0
+    max_y = 0
     for c in contours:
         area = cv2.contourArea(c)
         # cv2.drawContours(result, [c], -1, (0, 255, 0), 4)
         # 1912589.0
         if area > 1000000 and area < 1800000:
             # cv2.drawContours(result, [c], -1, (0, 0, 255), 4)
-            min_x = 1000000
-            min_y = 1000000
-            max_x = 0
-            max_y = 0
+
             for i in c:
                 if i[0][0] < min_x:
                     min_x = i[0][0]
@@ -162,22 +165,45 @@ def find_chess_positions(origin_desk, desk_coord, chess_coord):
     return result
 
 
-def main():
-    desk = cv2.imread(desk_img_path)
+def detect_chess(screen):
+    # desk = cv2.imread(desk_img_path)
+
+    start_time = time.time()
 
     chess_coord = []
     for black_chess_piece in black_chess_piece_arr:
-        chess_coord += find_chess_piece_position(desk, black_chess_piece, desk_img_path, 0.8)
+        chess_coord += find_chess_piece_position(screen, black_chess_piece, desk_img_path, 0.8)
+
+    print("1--- %s seconds ---" % (time.time() - start_time))
+    start_time = time.time()
 
     for white_chess_piece in white_chess_piece_arr:
-        chess_coord += find_chess_piece_position(desk, white_chess_piece, desk_img_path, 0.6)
+        chess_coord += find_chess_piece_position(screen, white_chess_piece, desk_img_path, 0.6)
 
-    desk_coord = find_rect(desk, desk_img_path)
-    chess_positions = find_chess_positions(desk, desk_coord, chess_coord)
+    print("2--- %s seconds ---" % (time.time() - start_time))
+    start_time = time.time()
 
-    cv2.imshow('detected', desk)
-    cv2.waitKey(0)
+    desk_coord = find_rect(screen, desk_img_path)
+    chess_positions = find_chess_positions(screen, desk_coord, chess_coord)
+
+    print("3--- %s seconds ---" % (time.time() - start_time))
 
 
-# run app
+def main():
+    mon = {'top': 0, 'left': 750, 'width': 1300, 'height': 750}
+    sct = mss()
+
+    while 1:
+        sct.get_pixels(mon)
+        img = Image.frombytes('RGB', (sct.width, sct.height), sct.image)
+
+        screen = np.array(img)
+        detect_chess(screen)
+        cv2.imshow('test', screen)
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            cv2.destroyAllWindows()
+            break
+
+
 main()
