@@ -23,24 +23,24 @@ class ChessColor(Enum):
 desk_img_path = 'images/desk2.png'
 prefix_path = 'images/chess/'
 # threshold = 0.8
-black_chess_piece_arr = [{'path': 'black_pawn.png', 'color': ChessColor.BLACK, 'model': Chess.PAWN},
-                         {'path': 'black_horse.png', 'color': ChessColor.BLACK, 'model': Chess.HORSE},
-                         {'path': 'black_king.png', 'color': ChessColor.BLACK, 'model': Chess.KING},
-                         {'path': 'black_rook.png', 'color': ChessColor.BLACK, 'model': Chess.ROOK},
-                         {'path': 'black_bishop.png', 'color': ChessColor.BLACK, 'model': Chess.BISHOP},
-                         {'path': 'black_queen.png', 'color': ChessColor.BLACK, 'model': Chess.QUEEN}]
+black_chess_piece_arr = [{'obj': cv2.imread('images/chess/black_pawn.png'), 'path': 'black_pawn.png', 'color': ChessColor.BLACK, 'model': Chess.PAWN},
+                         {'obj': cv2.imread('images/chess/black_horse.png'), 'path': 'black_horse.png', 'color': ChessColor.BLACK, 'model': Chess.HORSE},
+                         {'obj': cv2.imread('images/chess/black_king.png'), 'path': 'black_king.png', 'color': ChessColor.BLACK, 'model': Chess.KING},
+                         {'obj': cv2.imread('images/chess/black_rook.png'), 'path': 'black_rook.png', 'color': ChessColor.BLACK, 'model': Chess.ROOK},
+                         {'obj': cv2.imread('images/chess/black_bishop.png'), 'path': 'black_bishop.png', 'color': ChessColor.BLACK, 'model': Chess.BISHOP},
+                         {'obj': cv2.imread('images/chess/black_queen.png'), 'path': 'black_queen.png', 'color': ChessColor.BLACK, 'model': Chess.QUEEN}]
 # threshold = 0.6
-white_chess_piece_arr = [{'path': 'white_pawn.png', 'color': ChessColor.WHITE, 'model': Chess.PAWN},
-                         {'path': 'white_horse.png', 'color': ChessColor.WHITE, 'model': Chess.HORSE},
-                         {'path': 'white_king.png', 'color': ChessColor.WHITE, 'model': Chess.KING},
-                         {'path': 'white_rook.png', 'color': ChessColor.WHITE, 'model': Chess.ROOK},
-                         {'path': 'white_bishop.png', 'color': ChessColor.WHITE, 'model': Chess.BISHOP},
-                         {'path': 'white_queen.png', 'color': ChessColor.WHITE, 'model': Chess.QUEEN}]
+white_chess_piece_arr = [{'obj': cv2.imread('images/chess/white_pawn.png'), 'path': 'white_pawn.png', 'color': ChessColor.WHITE, 'model': Chess.PAWN},
+                         {'obj': cv2.imread('images/chess/white_horse.png'), 'path': 'white_horse.png', 'color': ChessColor.WHITE, 'model': Chess.HORSE},
+                         {'obj': cv2.imread('images/chess/white_king.png'), 'path': 'white_king.png', 'color': ChessColor.WHITE, 'model': Chess.KING},
+                         {'obj': cv2.imread('images/chess/white_rook.png'), 'path': 'white_rook.png', 'color': ChessColor.WHITE, 'model': Chess.ROOK},
+                         {'obj': cv2.imread('images/chess/white_bishop.png'), 'path': 'white_bishop.png', 'color': ChessColor.WHITE, 'model': Chess.BISHOP},
+                         {'obj': cv2.imread('images/chess/white_queen.png'), 'path': 'white_queen.png', 'color': ChessColor.WHITE, 'model': Chess.QUEEN}]
 
 
 def get_img_rect(image_file):
-    img = cv2.imread(image_file, 0)
-    w_pawn_white, h_pawn_white = img.shape[::-1]
+    # img = cv2.imread(image_file, 0)
+    w_pawn_white, h_pawn_white = image_file.shape[::-1]
     return [w_pawn_white, h_pawn_white]
 
 
@@ -77,9 +77,9 @@ def fix_duplication(loc_arr):
 
 
 def find_chess_piece_position(origin_desk, chess_piece_img, desk_img, threshold):
-    desk_black_white = convert_to_black_white(cv2.imread(prefix_path + chess_piece_img['path']))
-    chess_piece_black_white_template = convert_to_black_white(origin_desk)
-    img_rect = get_img_rect(prefix_path + chess_piece_img['path'])
+    desk_black_white = convert_to_black_white(origin_desk)
+    chess_piece_black_white_template = convert_to_black_white(chess_piece_img['obj'])
+    img_rect = get_img_rect(chess_piece_black_white_template)
 
     res = cv2.matchTemplate(desk_black_white, chess_piece_black_white_template, cv2.TM_CCOEFF_NORMED)
 
@@ -144,7 +144,7 @@ def find_rect(origin_desk, image_file):
     return [[min_x, min_y], [max_x, max_y]]
 
 
-def find_chess_positions(origin_desk, desk_coord, chess_coord):
+def find_chess_positions(origin_desk, desk_coord, chess_coord, my_color):
     # x = horizont (a, b, c, d, e, f, g, h)
     # y = vertical (8, 7, 6, 5, 4, 3, 2, 1)
     # desk_coord - [[x, y], [x, y]]
@@ -152,8 +152,12 @@ def find_chess_positions(origin_desk, desk_coord, chess_coord):
 
     result = []
     for chess in chess_coord:
-        pos = str(9 - math.ceil((chess['position'][1] - desk_coord[0][1])/rect_size[0])) + \
-              chr(64 + math.ceil((chess['position'][0] - desk_coord[0][0])/rect_size[0]))
+        if(my_color == ChessColor.WHITE):
+          pos = str(9 - math.ceil((chess['position'][1] - desk_coord[0][1])/rect_size[0])) + \
+                chr(64 + math.ceil((chess['position'][0] - desk_coord[0][0])/rect_size[0]))
+        else:
+          pos = str(math.ceil((chess['position'][1] - desk_coord[0][1])/rect_size[0])) + \
+                chr(73 - math.ceil((chess['position'][0] - desk_coord[0][0])/rect_size[0]))
         result.append({'color': chess['color'], 'model': chess['model'], 'position': pos})
         cv2.putText(origin_desk,
                     pos,
@@ -165,7 +169,28 @@ def find_chess_positions(origin_desk, desk_coord, chess_coord):
     return result
 
 
-def detect_chess(screen):
+def detect_my_color(origin_desk, desk_coord, chess_coord):
+  if len(chess_coord) != 0:
+    if chess_coord[0]['position'][1] > chess_coord[len(chess_coord)-1]['position'][1]:
+      my_color = ChessColor.BLACK
+      my_color_str = "You are black"
+    else:
+      my_color = ChessColor.WHITE
+      my_color_str = "You are white"
+  
+    cv2.putText(origin_desk,
+                      my_color_str,
+                      (desk_coord[0][0], desk_coord[0][1] - 45),
+                      cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255))
+
+    return my_color  # None 
+
+def init(screen):
+  desk_coord = find_rect(screen, desk_img_path)
+  
+  return desk_coord
+
+def detect_chess(screen, desk_coord):
     # desk = cv2.imread(desk_img_path)
 
     start_time = time.time()
@@ -181,13 +206,13 @@ def detect_chess(screen):
 
     parse_white = time.time()
 
-    desk_coord = find_rect(screen, desk_img_path)
-    chess_positions = find_chess_positions(screen, desk_coord, chess_coord)
+    my_color = detect_my_color(screen, desk_coord, chess_coord)
+    
+    chess_positions = find_chess_positions(screen, desk_coord, chess_coord, my_color)
 
     print("parse_black: %s, parse_white: %s, total: %s" % (round(parse_black - start_time, 2),
                                                            round(parse_white - parse_black, 2),
                                                            round(time.time() - start_time, 2)))
-
 
 def main():
     mon = {'top': 0, 'left': 750, 'width': 1300, 'height': 750}
@@ -198,7 +223,10 @@ def main():
         img = Image.frombytes('RGB', (sct.width, sct.height), sct.image)
 
         screen = np.array(img)
-        detect_chess(screen)
+        desk_coord = None
+        if(desk_coord == None):
+          desk_coord = init(screen)
+        detect_chess(screen, desk_coord)
         cv2.imshow('test', screen)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
