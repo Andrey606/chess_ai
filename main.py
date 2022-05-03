@@ -149,7 +149,6 @@ def find_chess_positions(origin_desk, desk_coord, chess_coord, my_color):
     # y = vertical (8, 7, 6, 5, 4, 3, 2, 1)
     # desk_coord - [[x, y], [x, y]]
     rect_size = [(desk_coord[1][0] - desk_coord[0][0])/8, (desk_coord[1][1] - desk_coord[0][1])/8]
-
     result = []
     for chess in chess_coord:
         if(my_color == ChessColor.WHITE):
@@ -215,7 +214,7 @@ def detect_chess(screen, desk_coord):
                                                            round(time.time() - start_time, 2)))
 
 def main():
-    mon = {'top': 0, 'left': 750, 'width': 1300, 'height': 750}
+    mon = {'top': 80, 'left': 780, 'width': 1030, 'height': 565}
     sct = mss()
 
     while 1:
